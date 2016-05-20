@@ -28,6 +28,10 @@
  */
 @property (nonatomic, assign) NSUInteger firstWeekday;
 
+
+@property (nonatomic, strong) UIFont *letterFont;
+@property (nonatomic, strong) UIFont *numberFont;
+
 /**
  Text color of the big numbers
  */

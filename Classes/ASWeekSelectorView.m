@@ -258,7 +258,7 @@
     CGRect nameFrame = CGRectMake(0, topPadding, width, nameHeight - topPadding);
     UILabel *letterLabel = [[UILabel alloc] initWithFrame:nameFrame];
     letterLabel.textAlignment = NSTextAlignmentCenter;
-    letterLabel.font = [UIFont systemFontOfSize:9];
+    letterLabel.font = self.letterFont;
     letterLabel.textColor = self.letterTextColor;
     letterLabel.text = [[[self.dayNameDateFormatter stringFromDate:date] uppercaseString] substringToIndex:1];
     [wrapper addSubview:letterLabel];
@@ -267,7 +267,7 @@
     CGRect numberFrame = CGRectMake(0, nameHeight, width, CGRectGetHeight(frame) - nameHeight);
     UILabel *numberLabel = [[UILabel alloc] initWithFrame:numberFrame];
     numberLabel.textAlignment = NSTextAlignmentCenter;
-    numberLabel.font = [UIFont systemFontOfSize:18];
+    numberLabel.font = self.numberFont;
     numberLabel.textColor = (isSelection && ! self.isAnimating) ? self.selectorLetterTextColor : self.numberTextColor;
     numberLabel.text = dayNumberText;
     numberLabel.tag = 100 + [dayNumberText integerValue];
