@@ -25,13 +25,14 @@
 
 @property (nonatomic, weak) UIScrollView *scrollView;
 @property (nonatomic, strong) NSMutableArray *singleWeekViews;
-@property (nonatomic, weak) ASDaySelectionView *selectionView;
+@property (nonatomic, strong) ASDaySelectionView *selectionView;
 @property (nonatomic, strong) ASDaySelectionView *todayView;
 @property (nonatomic, weak) UIView *lineView;
 
 // for animating the selection view
 @property (nonatomic, assign) CGFloat preDragSelectionX;
 @property (nonatomic, assign) CGFloat preDragOffsetX;
+
 @property (nonatomic, assign) BOOL isAnimating;
 @property (nonatomic, assign) BOOL isSettingFrame;
 
@@ -151,15 +152,6 @@
     CGPoint offset = scrollView.contentOffset;
     BOOL updatedOffset = NO;
 
-    // place the selection views
-    if (self.preDragOffsetX < MAXFLOAT) {
-        CGFloat selectionX = self.preDragSelectionX - (offset.x - self.preDragOffsetX);
-
-        CGRect selectionViewFrame = self.selectionView.frame;
-        selectionViewFrame.origin.x = selectionX;
-        self.selectionView.frame = selectionViewFrame;
-    }
-
     // prevent horizontal scrolling
     if (offset.y != 0) {
         offset.y = 0;
@@ -191,9 +183,6 @@
             if ([self.delegate respondsToSelector:@selector(weekSelectorDidSwipe:)]) {
                 [self.delegate weekSelectorDidSwipe:self];
             }
-            NSDate *date = [self dateByAddingDays:-7 toDate:self.selectedDate];
-            [self userWillSelectDate:date];
-            [self userDidSelectDate:date];
 
         } else {
             // 1 and 2 move to the left
@@ -210,9 +199,6 @@
             if ([self.delegate respondsToSelector:@selector(weekSelectorDidSwipe:)]) {
                 [self.delegate weekSelectorDidSwipe:self];
             }
-            NSDate *date = [self dateByAddingDays:7 toDate:self.selectedDate];
-            [self userWillSelectDate:date];
-            [self userDidSelectDate:date];
         }
 
         // reset offset
@@ -237,17 +223,19 @@
 
 - (UIView *)singleWeekView:(ASSingleWeekView *)singleWeekView viewForDate:(NSDate *)date withFrame:(CGRect)frame
 {
-    BOOL isSelection = [self date:date matchesDateComponentsOfDate:self.selectedDate];
-    if (isSelection) {
-        self.selectionView.frame = frame;
-    }
-
     NSDate *today = [NSDate date];
     BOOL isToday = [self date:date matchesDateComponentsOfDate:today];
     if (isToday) {
         self.todayView.frame = frame;
         [singleWeekView insertSubview:self.todayView atIndex:0];
         self.lastToday = today;
+    }
+
+    BOOL isSelection = [self date:date matchesDateComponentsOfDate:self.selectedDate];
+    if (isSelection) {
+        self.selectionView.frame = frame;
+        [singleWeekView addSubview:self.selectionView];
+        [singleWeekView sendSubviewToBack:self.selectionView];
     }
 
     ASContainerView *wrapper = [[ASContainerView alloc] initWithFrame:frame];
@@ -288,15 +276,20 @@
     [self userWillSelectDate:date];
     [self colorLabelForDate:_selectedDate withTextColor:self.numberTextColor];
 
-    [UIView animateWithDuration:0.25f
-                     animations:
-     ^{
-         self.selectionView.frame = frame;
-     }
-                     completion:
-     ^(BOOL finished) {
-         [self userDidSelectDate:date];
-     }];
+    if (self.selectionView.superview != singleWeekView) {
+        [singleWeekView addSubview:self.selectionView];
+        [singleWeekView sendSubviewToBack:self.selectionView];
+        self.selectionView.frame = frame;
+        [self userDidSelectDate:date];
+    }
+    else {
+        [UIView animateWithDuration:0.25 animations:^{
+            self.selectionView.frame = frame;
+        } completion:
+         ^(BOOL finished) {
+             [self userDidSelectDate:date];
+         }];
+    }
 }
 
 #pragma mark - Private helpers
@@ -461,7 +454,7 @@
         [UIView animateWithDuration:0.25f
                          animations:
          ^{
-             self.selectionView.frame = selectionViewFrame;
+             //self.selectionView.frame = selectionViewFrame;
          } completion:^(BOOL finished) {
              [self colorLabelForDate:_selectedDate withTextColor:self.selectorLetterTextColor];
          }];
@@ -500,7 +493,6 @@
         view.circleCenter = CGPointMake(width / 2, 20 + (height - 20) / 2);
         view.circleColor = self.tintColor;
         view.userInteractionEnabled = NO;
-        [self insertSubview:view aboveSubview:self.lineView];
         _selectionView = view;
     }
     return _selectionView;
