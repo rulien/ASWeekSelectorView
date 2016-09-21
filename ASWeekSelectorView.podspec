@@ -12,4 +12,5 @@ Pod::Spec.new do |s|
   s.platform     = :ios, '7.0'
   s.source_files = 'Classes/*.{h,m}'
   s.requires_arc = true
+  s.dependency 'MPColorTools', '1.6.1'
 end
